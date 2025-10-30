@@ -10,5 +10,17 @@
   to = "/index.html"
   status = 200
 
-# Environment variables will be set in Netlify dashboard
-# VITE_GEMINI_API_KEY should be configured in Netlify site settings
+# Environment variables configuration:
+# 
+# REQUIRED ENVIRONMENT VARIABLE:
+# ================================
+# VITE_GEMINI_API_KEY = "your-gemini-api-key-here"
+# 
+# This should be set in Netlify Dashboard:
+# Site Settings → Environment Variables → Add Variable
+# 
+# Key: VITE_GEMINI_API_KEY
+# Value: [Your Gemini API Key Here]
+# 
+# ⚠️  DO NOT add the actual API key to this file!
+# ⚠️  It will be public in your GitHub repository!
