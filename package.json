@@ -1,8 +1,25 @@
 {
   "name": "pdf-audio-reader",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.1.0",
   "type": "module",
+  "description": "AI-powered PDF audio reader with Google Gemini text-to-speech",
+  "author": "eisildak",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eisildak/pdf-audio-reader.git"
+  },
+  "keywords": [
+    "pdf",
+    "audio",
+    "text-to-speech",
+    "ai",
+    "gemini",
+    "react",
+    "typescript",
+    "accessibility"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
