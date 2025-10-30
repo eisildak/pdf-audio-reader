@@ -193,7 +193,8 @@ export default function App() {
     const [playbackState, setPlaybackState] = useState<PlaybackState>(PlaybackState.STOPPED);
     const [selectedText, setSelectedText] = useState('');
     const [isParsing, setIsParsing] = useState(false);
-    const [playbackRate, setPlaybackRate] = useState(1.0);
+    const [playbackRate, setPlaybackRate] = useState(1);
+    const [isAudioInitialized, setIsAudioInitialized] = useState(false);
 
     const audioContextRef = useRef<AudioContext | null>(null);
     const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
@@ -208,7 +209,7 @@ export default function App() {
         }
     }, []);
 
-    const playAudio = useCallback(async (text: string) => {
+    const initAudioContext = useCallback(async () => {
         if (!audioContextRef.current) {
             const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
             audioContextRef.current = new AudioContext({ sampleRate: 24000 });
@@ -217,21 +218,32 @@ export default function App() {
         if (audioContextRef.current.state === 'suspended') {
             await audioContextRef.current.resume();
         }
+        
+        // iOS için özel kontrol
+        if (!isAudioInitialized && audioContextRef.current.state === 'running') {
+            setIsAudioInitialized(true);
+        }
+        
+        return audioContextRef.current;
+    }, []);
+
+    const playAudio = useCallback(async (text: string) => {
+        const audioContext = await initAudioContext();
 
         setPlaybackState(PlaybackState.LOADING);
         const base64Audio = await generateSpeech(text);
 
-        if (base64Audio && audioContextRef.current) {
+        if (base64Audio && audioContext) {
             try {
                 const audioBytes = decode(base64Audio);
-                const audioBuffer = await decodeAudioData(audioBytes, audioContextRef.current, 24000, 1);
+                const audioBuffer = await decodeAudioData(audioBytes, audioContext, 24000, 1);
 
                 cleanupAudio();
 
-                const source = audioContextRef.current.createBufferSource();
+                const source = audioContext.createBufferSource();
                 source.buffer = audioBuffer;
                 source.playbackRate.value = playbackRate;
-                source.connect(audioContextRef.current.destination);
+                source.connect(audioContext.destination);
                 source.start();
                 setPlaybackState(PlaybackState.PLAYING);
                 sourceNodeRef.current = source;
@@ -271,8 +283,11 @@ export default function App() {
     }, [textChunks, playAudio]);
 
     const handlePlay = useCallback(async () => {
+        // İlk kez oynatılıyorsa audio context'i başlat
+        await initAudioContext();
+        
         if (playbackState === PlaybackState.PAUSED && audioContextRef.current) {
-             audioContextRef.current.resume();
+             await audioContextRef.current.resume();
              setPlaybackState(PlaybackState.PLAYING);
              return;
         }
@@ -286,7 +301,7 @@ export default function App() {
                 source.onended = playNextChunk;
             }
         }
-    }, [playbackState, textChunks, playAudio, playNextChunk, currentChunkIndex]);
+    }, [playbackState, textChunks, playAudio, playNextChunk, currentChunkIndex, initAudioContext]);
 
     const handlePause = useCallback(() => {
         if (audioContextRef.current && playbackState === PlaybackState.PLAYING) {
