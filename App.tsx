@@ -4,8 +4,7 @@ import { extractTextFromPdf } from './services/pdfService';
 import { generateSimpleSpeech } from './services/simpleTts';
 import { splitIntoParagraphs } from './utils/textUtils';
 import { decode, decodeAudioData } from './utils/audioUtils';
-import { testAudio } from './utils/testAudio';
-import { testGeminiAPI } from './utils/testGemini';
+
 
 // --- Helper Components (defined outside App to prevent re-creation on render) ---
 
@@ -181,23 +180,7 @@ const PlaybackControls: React.FC<PlaybackControlsProps> = ({ state, selectedText
                     </div>
                 )}
                 
-                {/* Test butonları - debug için */}
-                <div className="pt-2 flex gap-2">
-                    <button 
-                        onClick={() => testAudio()} 
-                        className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-1 px-3 rounded-full transition-colors text-xs"
-                        aria-label="Test Audio"
-                    >
-                        🔊 Audio
-                    </button>
-                    <button 
-                        onClick={() => testGeminiAPI()} 
-                        className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-1 px-3 rounded-full transition-colors text-xs"
-                        aria-label="Test API"
-                    >
-                        🤖 API
-                    </button>
-                </div>
+
             </div>
         </footer>
     );
@@ -249,22 +232,14 @@ export default function App() {
 
     const playAudio = useCallback(async (text: string) => {
         try {
-            console.log('PlayAudio called with text length:', text.length);
-            
             if (!text || text.trim().length === 0) {
-                console.error('Empty text provided to playAudio');
                 setPlaybackState(PlaybackState.STOPPED);
                 return null;
             }
 
             const audioContext = await initAudioContext();
-            console.log('Audio context initialized, state:', audioContext.state);
-
             setPlaybackState(PlaybackState.LOADING);
-            console.log('Generating speech...');
-            
             const base64Audio = await generateSimpleSpeech(text);
-            console.log('Speech generated, base64Audio length:', base64Audio?.length || 0);
 
             if (base64Audio && audioContext) {
                 try {
@@ -281,15 +256,12 @@ export default function App() {
                     source.start();
                     setPlaybackState(PlaybackState.PLAYING);
                     sourceNodeRef.current = source;
-                    console.log('Audio playbook started successfully');
                     return source;
                 } catch (decodeError) {
-                    console.error("Error decoding audio:", decodeError);
                     setPlaybackState(PlaybackState.STOPPED);
                     return null;
                 }
             } else {
-                console.error('No audio data received from generateSpeech');
                 setPlaybackState(PlaybackState.STOPPED);
                 return null;
             }
@@ -325,39 +297,28 @@ export default function App() {
 
     const handlePlay = useCallback(async () => {
         try {
-            console.log('Play button clicked, current state:', playbackState);
-            
-            // İlk kez oynatılıyorsa audio context'i başlat
             await initAudioContext();
             
             if (playbackState === PlaybackState.PAUSED && audioContextRef.current) {
                 await audioContextRef.current.resume();
                 setPlaybackState(PlaybackState.PLAYING);
-                console.log('Resumed from pause');
                 return;
             }
 
             if (textChunks.length > 0 && playbackState !== PlaybackState.PLAYING) {
-                console.log('Starting playback from chunk:', currentChunkIndex);
                 isPlayingSelectionRef.current = false;
-                
-                // If stopped, start from the current index (which is 0 or set by selection)
                 const textToPlay = textChunks[currentChunkIndex];
+                
                 if (!textToPlay || textToPlay.trim().length === 0) {
-                    console.error('No text to play at index:', currentChunkIndex);
                     return;
                 }
                 
                 const source = await playAudio(textToPlay);
                 if (source) {
                     source.onended = playNextChunk;
-                    console.log('Audio source created and playing');
-                } else {
-                    console.error('Failed to create audio source');
                 }
             }
         } catch (error) {
-            console.error('Error in handlePlay:', error);
             setPlaybackState(PlaybackState.STOPPED);
         }
     }, [playbackState, textChunks, playAudio, playNextChunk, currentChunkIndex, initAudioContext]);
