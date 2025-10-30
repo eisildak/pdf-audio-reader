@@ -1,8 +1,12 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 
 export async function generateSpeech(text: string): Promise<string | null> {
-    // FIX: Removed API key check to align with guidelines, assuming API_KEY is always provided.
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+        console.error('Gemini API key not found in environment variables');
+        return null;
+    }
+    const ai = new GoogleGenAI({ apiKey });
 
     try {
         const response = await ai.models.generateContent({
