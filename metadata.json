@@ -1,0 +1,5 @@
+{
+  "name": "PDF Audio Reader",
+  "description": "Yapay zeka destekli, PDF makalelerini yüksek sesle okuyan bir uygulama. Kullanıcılar bir PDF yükleyebilir, anlatımı oynatabilir, duraklatabilir veya durdurabilir ve okunacak belirli metinleri seçebilir.",
+  "requestFramePermissions": []
+}
