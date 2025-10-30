@@ -1,11 +1,19 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 
 export async function generateSpeech(text: string): Promise<string | null> {
+    console.log('generateSpeech called with text length:', text.length);
+    
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
     if (!apiKey) {
         console.error('Gemini API key not found in environment variables');
+        console.log('Available env vars:', {
+            VITE_GEMINI_API_KEY: !!import.meta.env.VITE_GEMINI_API_KEY,
+            GEMINI_API_KEY: !!process.env.GEMINI_API_KEY
+        });
         return null;
     }
+    
+    console.log('API key found, length:', apiKey.length);
     const ai = new GoogleGenAI({ apiKey });
 
     try {
