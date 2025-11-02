@@ -2,6 +2,8 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { PlaybackState } from './types';
 import { extractTextFromPdf } from './services/pdfService';
 import { generateSimpleSpeech } from './services/simpleTts';
+import { generateOptimizedSpeech, generateDemoSpeech } from './services/optimizedTts';
+import { SmartTTSManager, TTSMode } from './services/smartTts';
 import { splitIntoParagraphs } from './utils/textUtils';
 import { decode, decodeAudioData } from './utils/audioUtils';
 
@@ -452,6 +454,49 @@ export default function App() {
                     />
                 </>
             )}
+            
+            {/* Minimal Gemini Debug Butonları */}
+            <div className="fixed top-4 right-4 flex flex-col gap-2 z-50">
+                <button 
+                    onClick={async () => {
+                        const { OfflineTTS } = await import('./services/offlineTts');
+                        const offlineTTS = new OfflineTTS();
+                        const success = await offlineTTS.speakOffline('Bu offline test sesidir');
+                        
+                        console.log('🔇 Offline TTS Status:', offlineTTS.getStatus());
+                        alert(success ? '✅ Offline TTS çalışıyor!' : '❌ Offline TTS başarısız');
+                    }}
+                    className="bg-purple-600 hover:bg-purple-700 text-white text-xs px-3 py-1 rounded"
+                >
+                    🔇 Offline TTS
+                </button>
+                <button 
+                    onClick={async () => {
+                        const { SmartTTSManager } = await import('./services/smartTts');
+                        const smartTTS = new SmartTTSManager();
+                        const status = smartTTS.getStatus();
+                        
+                        console.log('🧠 Smart TTS Status:', status);
+                        alert(`Smart TTS: Gemini ${status.geminiUsage}, Offline: ${status.offlineStatus.supported ? 'Aktif' : 'Pasif'}`);
+                    }}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-1 rounded"
+                >
+                    🧠 Smart Status
+                </button>
+                <button 
+                    onClick={() => {
+                        const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+                        console.log('🔑 API Status:', {
+                            found: Boolean(apiKey),
+                            length: apiKey?.length || 0
+                        });
+                        alert(`API: ${apiKey ? 'Mevcut' : 'Yok'} (${apiKey?.length || 0} karakter)`);
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded"
+                >
+                    🔑 API Status
+                </button>
+            </div>
         </div>
     );
 }
